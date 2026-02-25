@@ -9,10 +9,8 @@ import { Readable } from "stream";
 const PORT = process.env.PORT || 8000;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// En Vercel process.cwd() es la raíz del proyecto; __dirname puede no incluir examples/
-const projectRoot = process.env.VERCEL ? process.cwd() : __dirname;
 
-const pathname = (dirname) => path.resolve(projectRoot, dirname);
+const pathname = (dirname) => path.resolve(__dirname, dirname);
 
 const logger = (req, res, next) => {
   const clearColor = "\x1b[0m";
@@ -89,7 +87,7 @@ if (process.env.DATA_BASE_URL) {
 
 app.use("/doc-css", express.static(pathname("doc/src/css")));
 app.use("/doc-src", importer("doc"));
-app.use("/dist", express.static(pathname("dist")));
+app.use("/dist", serveDist);
 app.use("/doc", express.static(pathname("examples/doc")));
 app.use("/custom-data", express.static(pathname("examples/custom-data")));
 app.use(
