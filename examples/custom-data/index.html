@@ -137,6 +137,32 @@
     </div>
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    (function() {
+      function onFilesChosen(input) {
+        var fl = input && input.files;
+        if (!fl || !fl.length) return;
+        var statusEl = document.getElementById('status');
+        if (window.__streetViewProcessFiles) {
+          statusEl.textContent = 'Procesando…';
+          window.__streetViewProcessFiles(fl).then(function() {
+            if (statusEl) statusEl.textContent = '';
+          }).catch(function(e) {
+            statusEl.textContent = 'Error: ' + (e && e.message ? e.message : String(e));
+          });
+        } else {
+          statusEl.textContent = 'Cargando visor… Espera unos segundos y vuelve a elegir la carpeta o archivos.';
+        }
+        input.value = '';
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        var fi = document.getElementById('local-file-input');
+        var fo = document.getElementById('local-folder-input');
+        if (fi) fi.addEventListener('change', function() { onFilesChosen(fi); });
+        if (fo) fo.addEventListener('change', function() { onFilesChosen(fo); });
+      });
+    })();
+  </script>
   <script type="module" src="street-app.js"></script>
 </body>
 </html>

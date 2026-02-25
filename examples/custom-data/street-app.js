@@ -300,8 +300,6 @@ async function init() {
   const dayList = document.getElementById("day-list");
   const statusEl = document.getElementById("status");
   const dropZone = document.getElementById("local-drop-zone");
-  const localInput = document.getElementById("local-file-input");
-  const folderInput = document.getElementById("local-folder-input");
 
   const setStatus = (msg) => {
     if (statusEl) statusEl.textContent = msg;
@@ -338,6 +336,11 @@ async function init() {
     }
   };
 
+  window.__streetViewProcessFiles = async function (fileList) {
+    const { files, paths } = collectImageFiles(fileList);
+    await handleLocalFiles(files, paths);
+  };
+
   if (dropZone) {
     dropZone.addEventListener("dragover", (e) => {
       e.preventDefault();
@@ -353,25 +356,6 @@ async function init() {
       } else {
         handleLocalFiles(result.files, result.paths);
       }
-    });
-  }
-
-  if (localInput) {
-    localInput.addEventListener("change", () => {
-      const fl = localInput.files;
-      if (!fl?.length) return;
-      const { files, paths } = collectImageFiles(fl);
-      handleLocalFiles(files, paths);
-      localInput.value = "";
-    });
-  }
-  if (folderInput) {
-    folderInput.addEventListener("change", () => {
-      const fl = folderInput.files;
-      if (!fl?.length) return;
-      const { files, paths } = collectImageFiles(fl);
-      handleLocalFiles(files, paths);
-      folderInput.value = "";
     });
   }
 
