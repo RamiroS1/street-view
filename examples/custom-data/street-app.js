@@ -252,6 +252,7 @@ function runWithManifest(manifest, blobUrlMap, statusEl, dayListEl) {
 
   const firstImageIds = manifest.days.map((d) => d.images[0]?.id).filter(Boolean);
   const initialImageId = firstImageIds[0];
+  if (!initialImageId) return;
 
   const viewer = new Viewer({
     container,
@@ -320,14 +321,21 @@ async function init() {
       setStatus("No se encontraron imágenes (jpg, png, webp).");
       return;
     }
-    setStatus(`Leyendo EXIF (GPS) y preparando ${files.length} imagen(es)…`);
-    const { manifest, blobUrlMap } = await buildLocalManifestAndBlobMap(
-      files,
-      paths,
-      (n, total) => setStatus(`Leyendo GPS… ${n + 1}/${total}`)
-    );
-    if (dropZone) dropZone.classList.add("hidden");
-    runWithManifest(manifest, blobUrlMap, statusEl, dayList);
+    try {
+      setStatus(`Leyendo EXIF (GPS) y preparando ${files.length} imagen(es)…`);
+      const { manifest, blobUrlMap } = await buildLocalManifestAndBlobMap(
+        files,
+        paths,
+        (n, total) => setStatus(`Leyendo GPS… ${n + 1}/${total}`)
+      );
+      setStatus("Construyendo Street View…");
+      runWithManifest(manifest, blobUrlMap, statusEl, dayList);
+      if (dropZone) dropZone.classList.add("hidden");
+      setStatus("");
+    } catch (err) {
+      console.error("handleLocalFiles:", err);
+      setStatus("Error: " + (err && err.message ? err.message : String(err)));
+    }
   };
 
   if (dropZone) {
