@@ -1,0 +1,86 @@
+import { bootstrap } from "../../Bootstrap";
+bootstrap();
+
+import { empty as observableEmpty } from "rxjs";
+import { Marker } from "../../../src/component/marker/marker/Marker";
+import { SimpleMarker } from "../../../src/component/marker/marker/SimpleMarker";
+import { MarkerComponent } from "../../../src/component/marker/MarkerComponent";
+import { Container } from "../../../src/viewer/Container";
+
+import { ContainerMockCreator } from "../../helper/ContainerMockCreator";
+import { NavigatorMockCreator } from "../../helper/NavigatorMockCreator";
+
+describe("MarkerComponent.ctor", () => {
+    it("should be defined", () => {
+        const markerComponent: MarkerComponent =
+            new MarkerComponent(
+                MarkerComponent.componentName,
+                new ContainerMockCreator().create(),
+                new NavigatorMockCreator().create());
+
+        expect(markerComponent).toBeDefined();
+    });
+});
+
+describe("MarkerComponent.add", () => {
+    let markerComponent: MarkerComponent;
+
+    beforeEach(() => {
+        const containerMock: Container = new ContainerMockCreator().create();
+        (<jasmine.Spy>containerMock.mouseService.filtered$).and.returnValue(observableEmpty());
+
+        markerComponent =
+            new MarkerComponent(
+                MarkerComponent.componentName,
+                containerMock,
+                new NavigatorMockCreator().create());
+
+        markerComponent.activate();
+    });
+
+    it("should be able to create two markers at the exact same position", () => {
+        let m1: Marker = new SimpleMarker("1", { lat: 0, lng: 0 }, {});
+        markerComponent.add([m1]);
+        expect(markerComponent.getAll().length).toBe(1);
+
+        let m2: Marker = new SimpleMarker("2", { lat: 0, lng: 0 }, {});
+        markerComponent.add([m2]);
+        expect(markerComponent.getAll().length).toBe(2);
+
+        markerComponent.remove([m1.id]);
+        expect(markerComponent.getAll().length).toBe(1);
+
+        markerComponent.remove([m2.id]);
+        expect(markerComponent.getAll().length).toBe(0);
+    });
+
+    it("should be able to update an marker by using the same id", () => {
+        let m1: Marker = new SimpleMarker("1", { lat: 0, lng: 0 }, {});
+        markerComponent.add([m1]);
+        expect(markerComponent.getAll().length).toBe(1);
+        expect(markerComponent.get("1").lngLat.lat).toBe(0);
+        expect(markerComponent.get("1").lngLat.lng).toBe(0);
+
+        let m2: Marker = new SimpleMarker("1", { lat: 1, lng: 1 }, {});
+        markerComponent.add([m2]);
+        expect(markerComponent.getAll().length).toBe(1);
+        expect(markerComponent.get("1").lngLat.lat).toBe(1);
+        expect(markerComponent.get("1").lngLat.lng).toBe(1);
+    });
+});
+
+describe("MarkerComponent.deactivate", () => {
+    it("should deactivate properly", () => {
+        const containerMock: Container = new ContainerMockCreator().create();
+        (<jasmine.Spy>containerMock.mouseService.filtered$).and.returnValue(observableEmpty());
+
+        const markerComponent: MarkerComponent =
+            new MarkerComponent(
+                MarkerComponent.componentName,
+                containerMock,
+                new NavigatorMockCreator().create());
+
+        markerComponent.activate();
+        markerComponent.deactivate();
+    });
+});

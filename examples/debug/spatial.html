@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>MapillaryJS Spatial</title>
+        <link rel="icon" href="data:," />
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, user-scalable=no"
+        />
+
+        <link rel="stylesheet" href="/dist/mapillary.css" />
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            html,
+            body,
+            #mly {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="mly"></div>
+
+        <script type="module">
+            import {
+                CameraControls,
+                CameraVisualizationMode,
+                GraphDataProvider,
+                OriginalPositionMode,
+                PointVisualizationMode,
+                Viewer,
+            } from "/dist/mapillary.module.js";
+            import { accessToken } from "/doc-src/.access-token/token.js";
+
+            const imageId = "780299919518360";
+
+            let cameraControls = CameraControls.Earth;
+            let spatialActive = true;
+
+            const dataProvider = new GraphDataProvider({ accessToken });
+            const viewer = new Viewer({
+                cameraControls,
+                component: { cover: false, spatial: spatialActive },
+                container: "mly",
+                dataProvider,
+            });
+
+            viewer.moveTo(imageId).catch((error) => console.error(error));
+
+            const spatial = viewer.getComponent("spatial");
+
+            viewer.on("click", (event) => {
+                spatial
+                    .getFrameIdAt(event.pixelPoint)
+                    .then((id) => console.log("Clicked frame:", id));
+            });
+
+            let hoveredImageId = null;
+            let paintedClusterId = null;
+            viewer.on("mousemove", async (event) => {
+                function paintCluster(clusterId, color) {
+                    spatial.setPointOverrideColor(clusterId, color);
+                    spatial.setCameraOverrideColor(clusterId, color);
+                }
+                const imageId = await spatial.getFrameIdAt(event.pixelPoint);
+                if (imageId === hoveredImageId) {
+                    return;
+                }
+                hoveredImageId = imageId;
+
+                if (paintedClusterId != null) {
+                    paintCluster(paintedClusterId, null);
+                    paintedClusterId = null;
+                }
+
+                if (hoveredImageId == null) {
+                    return;
+                }
+
+                const images = await dataProvider.getImages([imageId]);
+                if (images.length !== 1) {
+                    return;
+                }
+                const image = images[0];
+                if (image.node.id !== hoveredImageId) {
+                    return;
+                }
+                const clusterId = image.node.cluster.id;
+                if (clusterId === paintedClusterId) {
+                    return;
+                }
+
+                paintCluster(clusterId, 0xff00ff);
+                paintedClusterId = clusterId;
+            });
+
+            const s = Object.assign({}, spatial.defaultConfiguration, {
+                imagesVisible: true,
+            });
+
+            const rotateCvm = (function () {
+                const camMode = CameraVisualizationMode;
+                const hidden = camMode.Hidden;
+                const homogeneous = camMode.Homogeneous;
+                const cluster = camMode.Cluster;
+                const connectedComponent = camMode.ConnectedComponent;
+                const sequence = camMode.Sequence;
+                const camModeRotation = {};
+                camModeRotation[hidden] = homogeneous;
+                camModeRotation[homogeneous] = cluster;
+                camModeRotation[cluster] = connectedComponent;
+                camModeRotation[connectedComponent] = sequence;
+                camModeRotation[sequence] = hidden;
+
+                return function () {
+                    s.cameraVisualizationMode =
+                        camModeRotation[s.cameraVisualizationMode];
+                    configure("cameraVisualizationMode");
+                };
+            })();
+
+            const rotatePm = (function () {
+                const posMode = OriginalPositionMode;
+                const hidden = posMode.Hidden;
+                const flat = posMode.Flat;
+                const altitude = posMode.Altitude;
+                const posModeRotation = {};
+                posModeRotation[hidden] = flat;
+                posModeRotation[flat] = altitude;
+                posModeRotation[altitude] = hidden;
+
+                return function () {
+                    s.originalPositionMode =
+                        posModeRotation[s.originalPositionMode];
+                    configure("originalPositionMode");
+                };
+            })();
+
+            const rotateCc = (function () {
+                const custom = CameraControls.Custom;
+                const earth = CameraControls.Earth;
+                const street = CameraControls.Street;
+                const camControlsRotation = {};
+                camControlsRotation[street] = custom;
+                camControlsRotation[custom] = earth;
+                camControlsRotation[earth] = street;
+
+                return function () {
+                    cameraControls = camControlsRotation[cameraControls];
+                    viewer.setCameraControls(cameraControls);
+                };
+            })();
+
+            const rotatePvm = (function () {
+                const hidden = PointVisualizationMode.Hidden;
+                const original = PointVisualizationMode.Original;
+                const cluster = PointVisualizationMode.Cluster;
+                const pvmRotation = {};
+                pvmRotation[hidden] = original;
+                pvmRotation[original] = cluster;
+                pvmRotation[cluster] = hidden;
+
+                return function () {
+                    s.pointVisualizationMode =
+                        pvmRotation[s.pointVisualizationMode];
+                    configure("pointVisualizationMode");
+                };
+            })();
+
+            const setFilter = (function () {
+                let filterIndex = 0;
+                const filters = [
+                    [],
+                    ["==", "cameraType", "spherical"],
+                    ["==", "sequenceId", "s5I5m7BvYykB677MpFnOIw"],
+                    [
+                        "in",
+                        "sequenceId",
+                        "s5I5m7BvYykB677MpFnOIw",
+                        "-aC4wx-8oOkCp6SFGXoyAg",
+                    ],
+                ];
+
+                return function () {
+                    filterIndex = (filterIndex + 1) % filters.length;
+                    viewer.setFilter(filters[filterIndex]).then(function (n) {
+                        console.log("filter", filters[filterIndex]);
+                    });
+                };
+            })();
+
+            window.document.addEventListener("keydown", (e) => {
+                if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+                    return;
+                }
+
+                let name = undefined;
+                switch (e.key) {
+                    case "t":
+                        name = "cellsVisible";
+                        break;
+                    case "i":
+                        toggleImages();
+                        break;
+                    case "l":
+                        toggleSpatial();
+                        break;
+                    case "c":
+                        rotateCvm();
+                        break;
+                    case "e":
+                        viewer.reset();
+                        break;
+                    case "o":
+                        rotatePm();
+                        break;
+                    case "r":
+                        rotateCc();
+                        break;
+                    case "p":
+                        rotatePvm();
+                        break;
+                    case "q":
+                        changeSize("pointSize", 0.9);
+                        break;
+                    case "w":
+                        changeSize("pointSize", 1.1);
+                        break;
+                    case "a":
+                        changeSize("cameraSize", 0.9);
+                        break;
+                    case "s":
+                        changeSize("cameraSize", 1.1);
+                        break;
+                    case "f":
+                        setFilter();
+                        break;
+                    default:
+                        break;
+                }
+
+                if (!!name) {
+                    toggleBooleanSetting(name);
+                }
+            });
+
+            function toggleImages() {
+                s.imagesVisible = !s.imagesVisible;
+                if (s.imagesVisible) {
+                    viewer.activateComponent("image");
+                } else {
+                    viewer.deactivateComponent("image");
+                }
+            }
+
+            function toggleSpatial() {
+                spatialActive = !spatialActive;
+                if (spatialActive) {
+                    viewer.activateComponent("spatial");
+                } else {
+                    viewer.deactivateComponent("spatial");
+                }
+            }
+
+            function toggleBooleanSetting(name) {
+                s[name] = !s[name];
+                configure(name);
+            }
+
+            function changeSize(name, coeff) {
+                s[name] *= coeff;
+                s[name] = Math.max(1e-3, Math.min(1, s[name]));
+                configure(name);
+            }
+
+            function configure(name) {
+                const c = {};
+                c[name] = s[name];
+                spatial.configure(c);
+            }
+        </script>
+    </body>
+</html>

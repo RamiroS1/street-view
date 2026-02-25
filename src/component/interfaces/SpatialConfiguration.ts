@@ -1,0 +1,89 @@
+import { ComponentConfiguration } from "./ComponentConfiguration";
+import { CameraVisualizationMode } from "../spatial/enums/CameraVisualizationMode";
+import { OriginalPositionMode } from "../spatial/enums/OriginalPositionMode";
+import { PointVisualizationMode } from "../spatial/enums/PointVisualizationMode";
+
+export const MAX_CAMERA_SIZE = 1;
+export const MAX_POINT_SIZE = 1;
+export const MIN_CAMERA_SIZE = 1e-3;
+export const MIN_POINT_SIZE = 1e-3;
+
+/**
+ * Interface for configuration of spatial component.
+ *
+ * @interface
+ * @example
+ * ```js
+ * var viewer = new Viewer({
+ *     ...
+ *     component: {
+ *         spatial: {
+ *             cameraSize: 0.5,
+ *             cameraVisualizationMode: CameraVisualizationMode.Cluster,
+ *             cellsVisible: true,
+ *             originalPositionMode: OriginalPositionMode.Altitude,
+ *             pointSize: 0.5,
+ *             pointVisualizationMode: PointVisualizationMode.Hidden,
+ *         },
+ *     },
+ *     ...
+ * });
+ * ```
+ */
+export interface SpatialConfiguration extends ComponentConfiguration {
+    /**
+     * The camera size on the interval [0.001, 1].
+     *
+     * @default 0.1
+     */
+    cameraSize?: number;
+
+    /**
+     * Specify the camera visualization mode.
+     *
+     * @default CameraVisualizationMode.Homogeneous
+     */
+    cameraVisualizationMode?: CameraVisualizationMode;
+
+    /**
+     * Specify if the currently rendered cells should be visualize on
+     * an approximated ground plane.
+     *
+     * @default false
+     */
+    cellsVisible?: boolean;
+
+    /**
+     * Cell grid depth from the cell of the currently
+     * selected camera.
+     *
+     * @description Max value is 3. Value will be clamped
+     * to the interval [1, 3].
+     * @default 1
+     */
+    cellGridDepth?: number;
+
+    /**
+     * Specify the original position visualization mode.
+     *
+     * @description The original positions are hidden
+     * by default.
+     *
+     * @default OriginalPositionMode.Hidden
+     */
+    originalPositionMode?: OriginalPositionMode;
+
+    /**
+     * The point size on the interval [0.001, 1].
+     *
+     * @default 0.05
+     */
+    pointSize?: number;
+
+    /**
+     * Specify how point clouds should be visualized.
+     *
+     * @default PointVisualizationMode.Original
+     */
+    pointVisualizationMode?: PointVisualizationMode;
+}

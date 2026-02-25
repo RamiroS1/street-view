@@ -1,0 +1,24 @@
+# IDE
+.idea
+.vagrant
+.vscode
+vagrant.*
+Vagrantfile
+
+# Dependencies
+/node_modules
+
+# Misc
+*.DS_STORE
+*.tgz
+*.watchman*
+
+yarn-error.log*
+yarn-debug.log*
+
+# Artifacts
+/build
+/dist
+
+# Imágenes (muy pesadas para GitHub; usar DATA_BASE_URL en Vercel u otro host)
+/data

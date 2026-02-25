@@ -1,0 +1,222 @@
+---
+id: try
+title: Try MapillaryJS
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+MapillaryJS is essentially an [npm package](https://www.npmjs.com/package/mapillary-js) that can be installed via [Yarn](https://classic.yarnpkg.com) or [npm](https://docs.npmjs.com/about-npm). In this guide we will go through what you need to do to start using MapillaryJS in your web application.
+
+:::info You will learn
+
+- How to install MapillaryJS
+- How to add MapillaryJS to your website
+
+:::
+
+## Prerequisites
+
+### Client Access Token
+
+To start using MapillaryJS with data from the [Mapillary](https://www.mapillary.com) platform, you need to:
+
+1. Create a [Mapillary account](https://www.mapillary.com/app/?login=true)
+2. [Sign in](https://www.mapillary.com/app/?login=true) to your account
+3. [Register an application](https://www.mapillary.com/dashboard/developers) in the developer dashboard
+4. Get the [client access token](https://mapillary.com/developer/api-documentation) for your new application
+
+Keep the _client access token_ for your application at hand, you will use it when initializing the MapillaryJS viewer later.
+
+When [extending MapillaryJS](/docs/extension/extend) to provide your own data, no account or access token is needed.
+
+### Tools
+
+To install MapillaryJS you need to have [Yarn](https://classic.yarnpkg.com) or [Node.js and npm](https://docs.npmjs.com/cli/v7/configuring-npm/install) installed.
+
+Once you have setup the prerequisites, you can try MapillaryJS in your own website.
+
+## Add MapillaryJS to a Website
+
+### Using an ES6 Module Bundler
+
+Install the package.
+
+<Tabs
+  defaultValue='yarn'
+  values={[
+    { label: 'Yarn', value: 'yarn', },
+    { label: 'npm', value: 'npm', },
+  ]
+}>
+<TabItem value='yarn'>
+
+```zsh
+yarn add mapillary-js
+```
+
+</TabItem>
+<TabItem value='npm'>
+
+```zsh
+npm install --save mapillary-js
+```
+
+</TabItem>
+</Tabs>
+
+Use a CSS loader or include the CSS file in the `<head>` of your HTML file.
+
+```html
+<link
+  href="https://unpkg.com/mapillary-js@4.1.2/dist/mapillary.css"
+  rel="stylesheet"
+/>
+```
+
+Include the following code in your application. You need to replace `<your access token>` with the _client access token_ for the application you registered before. You also need a valid image ID to initialize the viewer.
+
+If you are developing a TypeScript application you will get code editor intellisense while typing.
+
+<Tabs
+  defaultValue='ts'
+  values={[
+    { label: 'TypeScript', value: 'ts', },
+    { label: 'JavaScript', value: 'js', },
+  ]
+}>
+<TabItem value='ts'>
+
+```ts
+import {Viewer, ViewerOptions} from 'mapillary-js';
+
+const container = document.createElement('div');
+container.style.width = '400px';
+container.style.height = '300px';
+document.body.appendChild(container);
+
+const options: ViewerOptions = {
+  accessToken: '<your access token>',
+  container,
+  imageId: '<your image ID for initializing the viewer>',
+};
+const viewer = new Viewer(options);
+```
+
+</TabItem>
+<TabItem value='js'>
+
+```js
+import {Viewer} from 'mapillary-js';
+
+const container = document.createElement('div');
+container.style.width = '400px';
+container.style.height = '300px';
+document.body.appendChild(container);
+
+const viewer = new Viewer({
+  accessToken: '<your access token>',
+  container,
+  imageId: '<your image ID for initializing the viewer>',
+});
+```
+
+</TabItem>
+</Tabs>
+
+### Using a CDN
+
+Include the JavaScript and CSS files in the `<head>` of your HTML file.
+
+```html
+<script src="https://unpkg.com/mapillary-js@4.1.2/dist/mapillary.js"></script>
+<link
+  href="https://unpkg.com/mapillary-js@4.1.2/dist/mapillary.css"
+  rel="stylesheet"
+/>
+```
+
+Add a container to the `<body>` of your HTML file.
+
+```html
+<div id="mly" style="width: 400px; height: 300px;"></div>
+```
+
+The global [UMD](https://github.com/umdjs/umd) name for MapillaryJS is `mapillary`. Include the following script in the `<body>` of your HTML file.
+
+```html
+<script>
+  var {Viewer} = mapillary;
+
+  var viewer = new Viewer({
+    accessToken: '<your access token>',
+    container: 'mly', // the ID of our container defined in the HTML body
+    imageId: '<your image ID for initializing the viewer>',
+  });
+</script>
+```
+
+## That's It!
+
+Congratulations! You have just added MapillaryJS to your project.
+
+You should see something similar to what is shown in the live editor below.
+
+:::note
+
+Throughout the documentation the live example editors use the [React library](https://reactjs.org/) and the [JSX syntax](https://reactjs.org/docs/introducing-jsx.html). This is the first such example that you will see. If you have not used React before, that is no problem, understanding React and JSX is not needed to follow along in the guides.
+
+:::
+
+:::tip
+
+You can edit the code and get immediate feedback in the **Result** section.
+
+:::
+
+```jsx live
+function renderMapillary(props) {
+  class ViewerComponent extends React.Component {
+    constructor(props) {
+      super(props);
+      this.containerRef = React.createRef();
+    }
+
+    componentDidMount() {
+      this.viewer = new Viewer({
+        accessToken: this.props.accessToken,
+        container: this.containerRef.current,
+        imageId: this.props.imageId,
+      });
+    }
+
+    componentWillUnmount() {
+      if (this.viewer) {
+        this.viewer.remove();
+      }
+    }
+
+    render() {
+      return <div ref={this.containerRef} style={this.props.style} />;
+    }
+  }
+
+  return (
+    <ViewerComponent
+      accessToken={accessToken}
+      imageId={'498763468214164'}
+      style={{width: '100%', height: '300px'}}
+    />
+  );
+}
+```
+
+## Recap
+
+- Install MapillaryJS with Yarn or npm, or use a CDN
+- Use a CSS loader or include the CSS file in the `<head>` of your HTML file
+- Import the Viewer class and create a new Viewer instance with your options
+
+## Next steps
+
+Now you are ready to start exploring the [guide to main concepts](/docs/main/guide).

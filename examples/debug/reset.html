@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Reset</title>
+        <link rel="icon" href="data:," />
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, user-scalable=no"
+        />
+
+        <link rel="stylesheet" href="/dist/mapillary.css" />
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            html,
+            body,
+            .viewer {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <script type="module">
+            import { accessToken } from "/doc-src/.access-token/token.js";
+            import {
+                CameraControls,
+                Viewer,
+                S2GeometryProvider,
+            } from "/dist/mapillary.module.js";
+            import { DynamicProceduralDataProvider } from "/doc-src/src/js/utils/DynamicProceduralDataProvider.js";
+
+            let viewer;
+            let dataProvider;
+            let intervals = 2;
+
+            const REFERENCE_DELTA = 1e-5;
+            const reference = { lng: 0, lat: 0, alt: 0 };
+
+            (function main() {
+                const container = document.createElement("div");
+                container.className = "viewer";
+                document.body.append(container);
+
+                dataProvider = new DynamicProceduralDataProvider({
+                    geometry: new S2GeometryProvider(16),
+                    reference,
+                    intervals,
+                });
+                const options = {
+                    dataProvider,
+                    cameraControls: CameraControls.Earth,
+                    component: {
+                        cover: false,
+                        spatial: {
+                            cameraSize: 0.3,
+                            cellGridDepth: 2,
+                            cellsVisible: true,
+                        },
+                    },
+                    container,
+                    imageTiling: false,
+                };
+                viewer = new Viewer(options);
+                viewer.on("image", (event) =>
+                    console.log("image", event.image ? event.image.id : null)
+                );
+                viewer.on("reference", (event) =>
+                    console.log("reference", event)
+                );
+                viewer.on("reset", (event) => console.log("reset", event));
+                viewer
+                    .moveTo(dataProvider.images.keys().next().value)
+                    .catch((error) => console.error(error));
+
+                listen();
+            })();
+
+            function increment() {
+                reference.lng += REFERENCE_DELTA;
+                reference.lat += REFERENCE_DELTA;
+                reference.alt += REFERENCE_DELTA;
+                intervals++;
+            }
+
+            function listen() {
+                window.document.addEventListener("keydown", async (e) => {
+                    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+                        return;
+                    }
+
+                    try {
+                        switch (e.key) {
+                            case "q": {
+                                // Clear data provider and reset viewer
+                                dataProvider.clear();
+                                await viewer.reset();
+                                break;
+                            }
+                            case "w": {
+                                // Clear data provider, reset viewer, repopulate
+                                // and move to new image
+                                increment();
+                                dataProvider.clear();
+                                await viewer.reset();
+                                dataProvider.populate({ reference, intervals });
+                                await viewer.moveTo(
+                                    dataProvider.images.keys().next().value
+                                );
+                                break;
+                            }
+                            case "e": {
+                                // Reset viewer and move to other image
+                                const image = await viewer.getImage();
+                                const imageId = image.id;
+                                await viewer.reset();
+                                const newId = [
+                                    ...dataProvider.images.keys(),
+                                ].find((id) => id !== imageId);
+                                if (newId) {
+                                    await viewer.moveTo(newId);
+                                }
+                                break;
+                            }
+                            case "r": {
+                                // Reset viewer and move to same image
+                                const image = await viewer.getImage();
+                                const imageId = image.id;
+                                await viewer.reset();
+                                await viewer.moveTo(imageId);
+                                break;
+                            }
+                            case "t": {
+                                // Set a new data provider
+                                increment();
+                                dataProvider =
+                                    new DynamicProceduralDataProvider({
+                                        reference,
+                                        intervals,
+                                        idCounter: dataProvider.idCounter,
+                                    });
+                                await viewer.setDataProvider(dataProvider);
+                                await viewer.moveTo(
+                                    dataProvider.images.keys().next().value
+                                );
+                                break;
+                            }
+                            case "y": {
+                                // Set a filter after reset
+                                const image = await viewer.getImage();
+                                const imageId = image.id;
+                                await viewer.reset();
+                                await viewer.setFilter([]);
+                                await viewer.moveTo(imageId);
+                                break;
+                            }
+                            case "u": {
+                                // Set a filter after reset and move
+                                const image = await viewer.getImage();
+                                const imageId = image.id;
+                                await viewer.reset();
+                                await viewer.moveTo(imageId);
+                                await viewer.setFilter([]);
+                                break;
+                            }
+                            case "i": {
+                                // Append and move to reset internal reference
+                                reference.lng += 2.4e-3;
+                                reference.lat += 5e-5;
+                                const imageIds = dataProvider.append({
+                                    reference,
+                                    intervals,
+                                });
+                                await viewer.moveTo(imageIds[0]);
+                                break;
+                            }
+                            default:
+                                break;
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                });
+            }
+        </script>
+    </body>
+</html>

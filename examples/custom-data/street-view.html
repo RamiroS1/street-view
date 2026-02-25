@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Street View — Asozulia 360</title>
+  <link rel="stylesheet" href="/dist/mapillary.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    #toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+    }
+    #day-list { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .day-btn {
+      padding: 0.4rem 0.75rem;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .day-btn:hover { background: #444; }
+    #status { font-size: 0.85rem; color: #aaa; }
+    #viewer { position: fixed; top: 48px; left: 0; right: 0; bottom: 0; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <span>Acquisition day:</span>
+    <div id="day-list"></div>
+    <span id="status"></span>
+  </div>
+  <div id="viewer"></div>
+  <script type="module" src="street-app.js"></script>
+</body>
+</html>

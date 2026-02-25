@@ -1,0 +1,31 @@
+/**
+ * @event
+ */
+export type ViewerEventType =
+    | "bearing"
+    | "click"
+    | "contextmenu"
+    | "dataprovider"
+    | "dblclick"
+    | "drag"
+    | "dragend"
+    | "dragstart"
+    | "fov"
+    | "dataloading"
+    | "load"
+    | "mousedown"
+    | "mousemove"
+    | "mouseout"
+    | "mouseover"
+    | "mouseup"
+    | "moveend"
+    | "movestart"
+    | "navigable"
+    | "image"
+    | "position"
+    | "pov"
+    | "reference"
+    | "remove"
+    | "reset"
+    | "sequenceedges"
+    | "spatialedges";
