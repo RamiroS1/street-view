@@ -1,16 +1,8 @@
-# Reduce deployment size: no subes las fotos por defecto.
-# Si quieres incluir imágenes: borra la línea "data/" de este archivo
-# (el repo no debe pasar de ~100–250 MB en Vercel).
-# O sube las fotos a otro sitio y pon DATA_BASE_URL en Vercel.
+# Imágenes (muy pesadas). Usa DATA_BASE_URL si las hosteas fuera.
 data/
 
-# No necesarios en el deploy
+# No necesarios para construir ni para el runtime
 doc/
 examples/debug
 test/
-src/
-config/
-scripts/
-build/
-declarations/
 .github/
