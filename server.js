@@ -9,8 +9,29 @@ import { Readable } from "stream";
 const PORT = process.env.PORT || 8000;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// En Vercel los archivos (dist, examples) están respecto a process.cwd()
+const projectRoot = process.env.VERCEL ? process.cwd() : __dirname;
+const pathname = (dirname) => path.resolve(projectRoot, dirname);
 
-const pathname = (dirname) => path.resolve(__dirname, dirname);
+const MIME = {
+  ".css": "text/css",
+  ".js": "application/javascript",
+  ".mjs": "application/javascript",
+};
+const serveDist = (req, res, next) => {
+  if (!req.path.startsWith("/dist/") && req.path !== "/dist") return next();
+  const subPath = (req.path.slice("/dist".length) || "/").replace(/^\//, "") || ".";
+  const filePath = path.join(pathname("dist"), subPath);
+  fs.stat(filePath, (err, stat) => {
+    if (err || !stat.isFile()) {
+      res.status(404).type("text/plain").send("Not Found");
+      return;
+    }
+    const ext = path.extname(filePath);
+    if (MIME[ext]) res.setHeader("Content-Type", MIME[ext]);
+    fs.createReadStream(filePath).pipe(res);
+  });
+};
 
 const logger = (req, res, next) => {
   const clearColor = "\x1b[0m";
