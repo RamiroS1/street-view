@@ -299,8 +299,8 @@ async function init() {
   const dayList = document.getElementById("day-list");
   const statusEl = document.getElementById("status");
   const dropZone = document.getElementById("local-drop-zone");
-  const loadPcBtn = document.getElementById("local-load-pc");
   const localInput = document.getElementById("local-file-input");
+  const folderInput = document.getElementById("local-folder-input");
 
   const setStatus = (msg) => {
     if (statusEl) statusEl.textContent = msg;
@@ -348,8 +348,7 @@ async function init() {
     });
   }
 
-  if (loadPcBtn && localInput) {
-    loadPcBtn.addEventListener("click", () => localInput.click());
+  if (localInput) {
     localInput.addEventListener("change", () => {
       const fl = localInput.files;
       if (!fl?.length) return;
@@ -358,29 +357,14 @@ async function init() {
       localInput.value = "";
     });
   }
-
-  if (typeof showDirectoryPicker === "function") {
-    const pickFolderBtn = document.getElementById("local-pick-folder");
-    if (pickFolderBtn) {
-      pickFolderBtn.style.display = "inline-block";
-      pickFolderBtn.addEventListener("click", async () => {
-        try {
-          const dir = await showDirectoryPicker({ mode: "read" });
-          const files = [];
-          const paths = [];
-          for await (const entry of dir.values()) {
-            if (entry.kind !== "file" || !IMAGE_EXTS.test(entry.name)) continue;
-            const file = await entry.getFile();
-            const pathKey = `${dir.name}/${entry.name}`;
-            files.push(file);
-            paths.push(pathKey);
-          }
-          handleLocalFiles(files, paths);
-        } catch (err) {
-          if (err.name !== "AbortError") setStatus("Error al abrir la carpeta: " + (err.message || err));
-        }
-      });
-    }
+  if (folderInput) {
+    folderInput.addEventListener("change", () => {
+      const fl = folderInput.files;
+      if (!fl?.length) return;
+      const { files, paths } = collectImageFiles(fl);
+      handleLocalFiles(files, paths);
+      folderInput.value = "";
+    });
   }
 
   const manifestRes = await fetch(MANIFEST_URL);
