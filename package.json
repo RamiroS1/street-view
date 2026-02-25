@@ -95,7 +95,7 @@
     "lint": "npm run lint-test && npm run lint-src",
     "lint-src": "tslint -c ./config/tslint.json -p tsconfig.json \"src/**/*.ts\"",
     "lint-test": "tslint -c ./config/tslint.json -p tsconfig.json \"test/**/*.ts\"",
-    "prepare": "npm run clear && npm run lint && npm run build && npm run copy-flow",
+    "prepare": "node -e \"if(process.env.VERCEL)process.exit(0); require('child_process').execSync('npm run clear && npm run lint && npm run build && npm run copy-flow', {stdio:'inherit'})\"",
     "serve": "node server.js",
     "serve-umd": "python3 -m http.server",
     "start": "npm run start-init && concurrently --kill-others-on-fail -n 'compile,bundle,serve' 'npm run compile-watch' 'npm run bundle-watch' 'npm run serve'",
