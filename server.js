@@ -2,15 +2,15 @@
 
 import express from "express";
 import fs from "fs";
-import path, { join } from "path";
+import path from "path";
+import { fileURLToPath } from "url";
 import { Readable } from "stream";
 
 const PORT = process.env.PORT || 8000;
 
-const pathname = (dirname) => {
-  const url = join(import.meta.url, `../${dirname}`);
-  return new URL(url).pathname;
-};
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const pathname = (dirname) => path.resolve(__dirname, dirname);
 
 const logger = (req, res, next) => {
   const clearColor = "\x1b[0m";
@@ -99,7 +99,13 @@ app.use(
   express.static(pathname("node_modules")),
   express.static(pathname("doc/node_modules"))
 );
-app.use("/", express.static(pathname("examples/custom-data")));
+const customDataDir = pathname("examples/custom-data");
+app.get("/", (req, res, next) => {
+  res.sendFile(path.join(customDataDir, "index.html"), (err) => {
+    if (err) next(err);
+  });
+});
+app.use("/", express.static(customDataDir));
 app.use("/debug", express.static(pathname("examples/debug")));
 
 if (!process.env.VERCEL) {
