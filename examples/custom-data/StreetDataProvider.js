@@ -1,6 +1,6 @@
 /**
  * Data provider for your Street View: loads the manifest (generated from data/ by day),
- * builds one sequence per acquisition day, and serves JPGs from /data.
+ * builds one sequence per acquisition day, and serves JPGs from /data or from local blob URLs.
  * Uses spherical (360°) camera type.
  */
 
@@ -9,7 +9,6 @@ import {
   S2GeometryProvider,
 } from "/dist/mapillary.module.js";
 
-const MANIFEST_URL = "/custom-data/street-manifest.json";
 const DEFAULT_REFERENCE = { lng: -73.1, lat: 7.0, alt: 0 };
 
 function makeEmptyCluster(id, reference) {
@@ -82,6 +81,8 @@ export class StreetDataProvider extends DataProviderBase {
     this._meshes = new Map();
     this._urlToFile = new Map();
     this._reference = options.reference ?? DEFAULT_REFERENCE;
+    /** @type {Map<string, string>|undefined} map manifest file path -> blob URL for local load */
+    this._blobUrlMap = options.blobUrlMap;
     this._buildFromManifest(manifest);
   }
 
@@ -146,6 +147,13 @@ export class StreetDataProvider extends DataProviderBase {
 
   getImageBuffer(url, abort) {
     const file = this._urlToFile.get(url) || url;
+    const blobUrl = this._blobUrlMap?.get(file);
+    if (blobUrl) {
+      return fetch(blobUrl).then((r) => {
+        if (!r.ok) throw new Error(`Failed to load local image`);
+        return r.arrayBuffer();
+      });
+    }
     const fullUrl = dataUrl(this._basePath, file);
     return fetch(fullUrl)
       .then((r) => {
@@ -172,11 +180,10 @@ export class StreetDataProvider extends DataProviderBase {
 }
 
 /**
- * Fetch manifest and create the provider. Use this before creating the Viewer.
+ * Create provider from an in-memory manifest and optional blobUrlMap (for local drag-and-drop).
+ * @param {object} manifest - { basePath, days: [ { id, name, images: [ { id, file, lat?, lng? } ] } ] }
+ * @param {object} [options] - { blobUrlMap: Map<filePath, blobURL> }
  */
-export async function createStreetDataProvider(options = {}) {
-  const res = await fetch(MANIFEST_URL);
-  if (!res.ok) throw new Error(`Failed to load manifest: ${MANIFEST_URL}`);
-  const manifest = await res.json();
+export function createStreetDataProviderFromManifest(manifest, options = {}) {
   return new StreetDataProvider(manifest, options);
 }

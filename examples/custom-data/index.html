@@ -63,6 +63,50 @@
       flex: 1;
       min-height: 200px;
     }
+    .local-drop {
+      position: fixed;
+      top: 48px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(0,0,0,0.85);
+      color: #eee;
+      padding: 1rem;
+    }
+    .local-drop.hidden { display: none; }
+    .local-drop.dragover { background: rgba(30,60,90,0.9); outline: 3px dashed #3498db; }
+    .local-drop p { margin: 0; font-size: 1rem; }
+    .local-btn {
+      padding: 0.6rem 1.2rem;
+      border: 2px solid #3498db;
+      border-radius: 8px;
+      background: #2c3e50;
+      color: #fff;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .local-btn:hover { background: #34495e; }
+    .local-close {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      width: 2rem;
+      height: 2rem;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: #999;
+      font-size: 1.5rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .local-close:hover { color: #fff; }
     @media (max-width: 768px) {
       #main { flex-direction: column; }
       #map-panel { width: 100%; height: 40vh; border-left: none; border-top: 1px solid #333; }
@@ -70,9 +114,18 @@
   </style>
 </head>
 <body>
+  <div id="local-drop-zone" class="local-drop hidden">
+    <button type="button" id="local-close-zone" class="local-close" aria-label="Cerrar">×</button>
+    <p>Arrastra aquí una carpeta o archivos de imagen (JPG, PNG, WebP)</p>
+    <p>o</p>
+    <button type="button" id="local-load-pc" class="local-btn">Seleccionar archivos</button>
+    <button type="button" id="local-pick-folder" class="local-btn" style="display:none;">Elegir carpeta</button>
+    <input type="file" id="local-file-input" multiple accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" style="display:none;" />
+  </div>
   <div id="toolbar">
     <span>Día de adquisición:</span>
     <div id="day-list"></div>
+    <button type="button" id="toolbar-load-local" class="local-btn" style="margin-left:auto;font-size:0.85rem;padding:0.35rem 0.6rem;">Cargar desde mi PC</button>
     <span id="status"></span>
   </div>
   <div id="main">
