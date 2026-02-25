@@ -3,9 +3,13 @@
   "installCommand": "npm install --legacy-peer-deps --ignore-scripts",
   "buildCommand": "npm run build",
   "builds": [
-    { "src": "api/index.js", "use": "@vercel/node" }
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["examples/custom-data/**", "dist/**", "node_modules/three/**"]
+      }
+    }
   ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/index.js" }
-  ]
+  "routes": [{"src": "/(.*)", "dest": "/api/index.js"}]
 }

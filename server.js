@@ -9,8 +9,10 @@ import { Readable } from "stream";
 const PORT = process.env.PORT || 8000;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// En Vercel process.cwd() es la raíz del proyecto; __dirname puede no incluir examples/
+const projectRoot = process.env.VERCEL ? process.cwd() : __dirname;
 
-const pathname = (dirname) => path.resolve(__dirname, dirname);
+const pathname = (dirname) => path.resolve(projectRoot, dirname);
 
 const logger = (req, res, next) => {
   const clearColor = "\x1b[0m";
@@ -99,13 +101,7 @@ app.use(
   express.static(pathname("node_modules")),
   express.static(pathname("doc/node_modules"))
 );
-const customDataDir = pathname("examples/custom-data");
-app.get("/", (req, res, next) => {
-  res.sendFile(path.join(customDataDir, "index.html"), (err) => {
-    if (err) next(err);
-  });
-});
-app.use("/", express.static(customDataDir));
+app.use("/", express.static(pathname("examples/custom-data")));
 app.use("/debug", express.static(pathname("examples/debug")));
 
 if (!process.env.VERCEL) {
